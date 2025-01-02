@@ -46,19 +46,25 @@ typedef enum {
 // 这里不能加日志，会导致循环调用
 void ConsoleLog(const XLoggerInfo* _info, const char* _log) {
     // NOTE: OH_LOG do not have verbose and none level
-    int level = (_info->level == TLogLevel::kLevelVerbose ? LOG_DEBUG : _info->level + 2);
-    if (!_info->filename || _info->filename[0] == '\0' || _info->line == 0) {
-        OH_LOG_Print(LOG_APP, (LogLevel)level, kHiLogDomain, _info->tag, kHiLogFormatTs, _log);
+    if (_info) {
+        int level = (_info->level == TLogLevel::kLevelVerbose ? LOG_DEBUG : _info->level + 2);
+        if (!_info->filename || _info->filename[0] == '\0' || _info->line == 0) {
+            OH_LOG_Print(LOG_APP, (LogLevel)level, kHiLogDomain, _info->tag, kHiLogFormatTs, _log);
+        } else {
+            OH_LOG_Print(LOG_APP,
+                         (LogLevel)level,
+                         kHiLogDomain,
+                         _info->tag,
+                         kHiLogFormat,
+                         0,
+                         _info->filename,
+                         _info->line,
+                         _log);
+        }
     } else {
-        OH_LOG_Print(LOG_APP,
-                     (LogLevel)level,
-                     kHiLogDomain,
-                     _info->tag,
-                     kHiLogFormat,
-                     0,
-                     _info->filename,
-                     _info->line,
-                     _log);
+        char result_log[16 * 1024] = {0};
+        snprintf(result_log, sizeof(result_log), "%s", _log ? _log : "NULL==log!!!");
+        OH_LOG_Print(LOG_APP, LOG_WARN, kHiLogDomain, "", "%s", result_log);
     }
 }
 

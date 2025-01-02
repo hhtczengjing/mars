@@ -8,6 +8,9 @@ add_definitions(-DXLOGGER_TAG="mars::${PROJECT_NAME}")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+if(OHOS)
+    add_definitions(-DOHOS)
+endif()
 if(UNITTEST)
     message("defined UNITTEST option")
     add_definitions(-DUNITTEST)
