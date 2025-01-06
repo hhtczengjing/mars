@@ -10,8 +10,7 @@
 const int32_t STR_DEFAULT_SIZE = 2048;
 const int32_t MAX_STR_LENGTH = 2048;
 
-static void JsValueToString(const napi_env & env, const napi_value & value, const int32_t bufLen, std::string & target)
-{
+static void JsValueToString(const napi_env & env, const napi_value & value, const int32_t bufLen, std::string & target) {
     if (bufLen <= 0 || bufLen > MAX_STR_LENGTH) {
         return;
     }
@@ -28,10 +27,10 @@ static void JsValueToString(const napi_env & env, const napi_value & value, cons
 
 // export const logWrite2: (logInstancePtr: number, level: number, tag: string, filename: string, funcName: string, line: number, pid: number, tid: number, mainTid: number, log: string) => void;
 static napi_value logWrite2(napi_env env, napi_callback_info info) {
+    // OH_LOG_Print(LOG_APP, LOG_WARN, LOG_DOMAIN, LOG_TAG, "logWriter2");
     size_t argc = 10;
     napi_value args[10] = {nullptr};
     
-    // OH_LOG_Print(LOG_APP, LOG_DEBUG, LOG_DOMAIN, LOG_TAG, "logWriter2");
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     
     int64_t _log_instance_ptr;
@@ -74,10 +73,8 @@ static napi_value logWrite2(napi_env env, napi_callback_info info) {
     xlog_info.tag = NULL == tag.c_str() ? "" : tag.c_str();
     xlog_info.filename = NULL == filename.c_str() ? "" : filename.c_str();
     xlog_info.func_name = NULL == funcname.c_str() ? "" : funcname.c_str();
-    // OH_LOG_Print(LOG_APP, LOG_DEBUG, LOG_DOMAIN, LOG_TAG, "logWriter2 11111");
     
     mars::xlog::XloggerWrite(_log_instance_ptr, &xlog_info, NULL == log.c_str() ? "NULL == log" : log.c_str());
-    // OH_LOG_Print(LOG_APP, LOG_DEBUG, LOG_DOMAIN, LOG_TAG, "logWriter2 22222");
     return nullptr;
 }
 
@@ -174,7 +171,7 @@ static napi_value newXlogInstance(napi_env env, napi_callback_info info) {
     JsValueToString(env, cacheDirNapiValue, STR_DEFAULT_SIZE, cacheDir);
     
     napi_value cacheDaysNapiValue;
-    napi_get_named_property(env, args, "cacheDays", &levelNapiValue);
+    napi_get_named_property(env, args, "cacheDays", &cacheDaysNapiValue);
     int cacheDays;
     napi_get_value_int32(env, cacheDaysNapiValue, &cacheDays);
     
@@ -255,7 +252,6 @@ static napi_value setConsoleLogOpen(napi_env env, napi_callback_info info) {
 static napi_value appenderOpen(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value args;
-    // OH_LOG_Print(LOG_APP, LOG_DEBUG, LOG_DOMAIN, LOG_TAG, "appenderOpen 1...");
     
     napi_get_cb_info(env, info, &argc, &args, nullptr, nullptr);
     
@@ -273,38 +269,37 @@ static napi_value appenderOpen(napi_env env, napi_callback_info info) {
     napi_get_named_property(env, args, "logDir", &logDirNapiValue);
     std::string logDir;
     JsValueToString(env, logDirNapiValue, STR_DEFAULT_SIZE, logDir);
-    
+
     napi_value namePrefixNapiValue;
     napi_get_named_property(env, args, "namePrefix", &namePrefixNapiValue);
     std::string namePrefix;
     JsValueToString(env, namePrefixNapiValue, STR_DEFAULT_SIZE, namePrefix);
-    
+
     napi_value pubKeyNapiValue;
     napi_get_named_property(env, args, "pubKey", &pubKeyNapiValue);
     std::string pubKey;
     JsValueToString(env, pubKeyNapiValue, STR_DEFAULT_SIZE, pubKey);
-    
+
     napi_value compressModeNapiValue;
     napi_get_named_property(env, args, "compressMode", &compressModeNapiValue);
     int compressMode;
     napi_get_value_int32(env, compressModeNapiValue, &compressMode);
-    
+
     napi_value compressLevelNapiValue;
     napi_get_named_property(env, args, "compressLevel", &compressLevelNapiValue);
     int compressLevel;
     napi_get_value_int32(env, compressLevelNapiValue, &compressLevel);
-    
+
     napi_value cacheDirNapiValue;
     napi_get_named_property(env, args, "cacheDir", &cacheDirNapiValue);
     std::string cacheDir;
     JsValueToString(env, cacheDirNapiValue, STR_DEFAULT_SIZE, cacheDir);
     
     napi_value cacheDaysNapiValue;
-    napi_get_named_property(env, args, "cacheDays", &levelNapiValue);
+    napi_get_named_property(env, args, "cacheDays", &cacheDaysNapiValue);
     int cacheDays;
     napi_get_value_int32(env, cacheDaysNapiValue, &cacheDays);
     
-    // OH_LOG_Print(LOG_APP, LOG_DEBUG, LOG_DOMAIN, LOG_TAG, "appenderOpen 2...");
     mars::xlog::XLogConfig config = {
         (mars::xlog::TAppenderMode)mode, 
         logDir.c_str(),
@@ -316,16 +311,15 @@ static napi_value appenderOpen(napi_env env, napi_callback_info info) {
         cacheDays
     };
     appender_open(config);
-    // OH_LOG_Print(LOG_APP, LOG_DEBUG, LOG_DOMAIN, LOG_TAG, "appenderOpen 3...");
     xlogger_SetLevel((TLogLevel)level);
-    
+
     mars::comm::XloggerCategory *category = mars::xlog::GetXloggerInstance(namePrefix.c_str());
     if (nullptr == category) {
         napi_value result;
         napi_create_int32(env, 0, &result);
         return result;
     }
-    
+
     napi_value result;
     napi_create_int64(env, reinterpret_cast<uintptr_t>(category), &result);
     return result;
